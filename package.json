@@ -1,4 +1,6 @@
 {
+  "name": "get-twitter-thread",
+  "version": "1.0.0",
   "scripts": {
     "build": "npx tsc",
     "run": "node build/src/index.js",
