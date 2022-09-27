@@ -26,8 +26,8 @@ export class TwitterThread {
     this._client = client;
   }
 
-  private getEndDate(startDate: string): string {
-    const date = new Date(startDate);
+  private getEndDate(createdDate: string): string {
+    const date = new Date(createdDate);
     date.setDate(date.getDate() + 1);
     return date.toISOString();
   }
@@ -42,7 +42,7 @@ export class TwitterThread {
       // Add tweet fields option if wasn't in passed options
       options['tweet.fields'] = this.REQUIRED_TWEET_FIELDS;
     } else {
-      // Supplment requred tweet fields if not present
+      // Supplement required tweet fields if not present
       for (const tweetField of this.REQUIRED_TWEET_FIELDS) {
         if (!options['tweet.fields'].some(x => x === tweetField)) {
           options['tweet.fields'].push(tweetField);
@@ -82,8 +82,11 @@ export class TwitterThread {
       page.data
         .filter(
           x =>
-            x.conversation_id === conversationId &&
-            x.in_reply_to_user_id === userId
+            // First tweet it thread
+            x.id === id ||
+            // Or subsequent tweets in thread
+            (x.conversation_id === conversationId &&
+              x.in_reply_to_user_id === userId)
         )
         .forEach(x => tweets.push(x));
     }

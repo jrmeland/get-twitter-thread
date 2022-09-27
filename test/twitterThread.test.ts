@@ -4,6 +4,7 @@ import {TwitterPaginatedResponse} from 'twitter-api-sdk/dist/types';
 import {TwitterThread} from '../src/twitterThread';
 
 const client = new Client('bearer token');
+const id = '0';
 
 const findTweetByIdMock = jest
   .spyOn(client.tweets, 'findTweetById')
@@ -28,30 +29,36 @@ const findTweetByIdMock = jest
 
 // create an asyncIterable object
 const asyncIterableObject = {
-  [Symbol.asyncIterator]() {
-    const id = '0';
-    return {
-      next() {
-        return Promise.resolve({
-          done: true,
-          value: {
-            data: [
-              {
-                id: id,
-                text: 'Tweet text 1',
-                author_id: 'UserId',
-                created_at: '2022-08-23T05:00:00.000Z',
-                conversation_id: id,
-              },
-            ],
-          },
-        });
-      },
+  async *[Symbol.asyncIterator]() {
+    yield {
+      data: [
+        {
+          id: id,
+          text: 'Tweet text 1',
+          author_id: 'UserId',
+          created_at: '2022-08-23T05:00:00.000Z',
+          conversation_id: id,
+          in_reply_to_user_id: 'UserId',
+        },
+        {
+          id: 'abc123',
+          text: 'Second tweet',
+          author_id: 'UserId',
+          created_at: '2022-08-23T05:01:00.000Z',
+          conversation_id: id,
+          in_reply_to_user_id: 'UserId',
+        },
+        {
+          id: 'xyz789',
+          text: 'This is not in thread',
+          author_id: 'UserId',
+          created_at: '2022-08-23T05:02:00.000Z',
+        },
+      ],
     };
   },
 };
 
-// create a function that returns TwitterPaginatedResponse<TwitterResponse<usersIdTweets>>
 const usersIdTweetsMock = jest
   .spyOn(client.tweets, 'usersIdTweets')
   .mockImplementation(
@@ -70,8 +77,9 @@ const usersIdTweetsMock = jest
 test('test happy path', async () => {
   const twitterThread = new TwitterThread(client);
 
-  await twitterThread.getThread('id');
+  const tweets = await twitterThread.getThread(id);
 
   expect(findTweetByIdMock).toBeCalled();
   expect(usersIdTweetsMock).toBeCalled();
+  expect(tweets.length).toBe(2);
 });
